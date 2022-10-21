@@ -97,7 +97,7 @@ const addUser = function(user) {
     .catch((err) => {
       console.log(err.message);
     });
-}
+};
 
 exports.addUser = addUser;
 
@@ -115,8 +115,8 @@ exports.addUser = addUser;
 
 
 const getAllReservations = function(guest_id, limit = 10) {
-return pool
-.query(`
+  return pool
+    .query(`
 SELECT reservations.*, properties.*, properties.cost_per_night, reservations.start_date, avg(rating) as average_rating
 FROM reservations
 JOIN properties ON reservations.property_id = properties.id
@@ -126,14 +126,14 @@ GROUP BY properties.id, reservations.id
 ORDER BY reservations.start_date
 LIMIT $2;
 `, [guest_id, limit])
-.then((result) => {
-  console.log(result.rows);
-  return result.rows;
-})
-.catch((err) => {
-  console.log(err.message);
-});
-}
+    .then((result) => {
+      console.log(result.rows);
+      return result.rows;
+    })
+    .catch((err) => {
+      console.log(err.message);
+    });
+};
 
 exports.getAllReservations = getAllReservations;
 
@@ -146,7 +146,7 @@ exports.getAllReservations = getAllReservations;
  * @return {Promise<[{}]>}  A promise to the properties.
  */
 
-const getAllProperties = function (options, limit = 10) {
+const getAllProperties = function(options, limit = 10) {
   // 1
   const queryParams = [];
   const maxPrice = [];
@@ -167,20 +167,20 @@ const getAllProperties = function (options, limit = 10) {
   }
 
   if (options.maximum_price_per_night) {
-    maxPrice.push(`${options.maximum_price_per_night * 100}`)
-  queryString += ` AND properties.cost_per_night < ${maxPrice} `;
+    maxPrice.push(`${options.maximum_price_per_night * 100}`);
+    queryString += ` AND properties.cost_per_night < ${maxPrice} `;
   }
 
   if (options.minimum_price_per_night) {
-    minPrice.push(options.minimum_price_per_night * 100)
-  queryString += ` AND properties.cost_per_night > ${minPrice} `;
+    minPrice.push(options.minimum_price_per_night * 100);
+    queryString += ` AND properties.cost_per_night > ${minPrice} `;
   }
 
-  queryString += ` GROUP BY properties.id `
+  queryString += ` GROUP BY properties.id `;
 
   if (options.minimum_rating) {
-    rating.push(options.minimum_rating)
-  queryString += ` HAVING AVG(property_reviews.rating) >= ${rating} `;
+    rating.push(options.minimum_rating);
+    queryString += ` HAVING AVG(property_reviews.rating) >= ${rating} `;
   }
 
 
@@ -206,10 +206,56 @@ exports.getAllProperties = getAllProperties;
  * @param {{}} property An object containing all of the property details.
  * @return {Promise<{}>} A promise to the property.
  */
+
+// const addProperty = function(property) {
+//   const propertyId = Object.keys(properties).length + 1;
+//   property.id = propertyId;
+//   properties[propertyId] = property;
+//   return Promise.resolve(property);
+// };
+
 const addProperty = function(property) {
-  const propertyId = Object.keys(properties).length + 1;
-  property.id = propertyId;
-  properties[propertyId] = property;
-  return Promise.resolve(property);
+  return pool
+    .query(`
+  INSERT INTO properties (
+    title, 
+    description, 
+    owner_id, 
+    cover_photo_url, 
+    thumbnail_photo_url, 
+    cost_per_night, 
+    parking_spaces, 
+    number_of_bathrooms, 
+    number_of_bedrooms, 
+    province, 
+    city, 
+    country, 
+    street, 
+    post_code) 
+  VALUES (
+  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+
+          `, [property.title, 
+            property.description, 
+            property.owner_id, 
+            property.cover_photo_url, 
+            property.thumbnail_photo_url, 
+            property.cost_per_night, 
+            property.parking_spaces, 
+            property.number_of_bathrooms, 
+            property.number_of_bedrooms, 
+            property.province, 
+            property.city, 
+            property.country, 
+            property.street, 
+            property.post_code])
+    .then((result) => {
+      console.log(result);
+      return result.rows[0];
+    })
+    .catch((err) => {
+      console.log(err.message);
+    });
 };
+
 exports.addProperty = addProperty;
